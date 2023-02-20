@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 //просто тест, в сцене не используется
@@ -11,6 +12,27 @@ public class CollisionTest : MonoBehaviour
     private bool collisionRight;
     public float rayLength = 1;
     public LayerMask mask;
+
+    public enum DamageType
+    {
+        Phisycal,
+        Fire,
+        Ice,
+        Poison,
+        None
+    };
+    public List<DamageType> damages = new List<DamageType>() { 
+        DamageType.Phisycal,
+        DamageType.Ice,
+        DamageType.Poison};
+
+    void Start()
+    {
+        bool damageIsContaine =  damages.Where(x => x == DamageType.Fire).Count() > 0;
+        bool damageIsContaine2 =  damages.Contains(DamageType.Fire);
+        
+        Debug.Log(damageIsContaine + " " + damageIsContaine2);
+    }
 
     private void FixedUpdate()
     {
