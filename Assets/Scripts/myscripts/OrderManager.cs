@@ -2,12 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Burst.CompilerServices;
 using UnityEditor;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR;
 
 public class OrderManager : MonoBehaviour
 {
@@ -151,6 +148,19 @@ public class OrderManager : MonoBehaviour
         wayMarkers.Add(nearestFirst);
         StartCoroutine(AddWayPoints());
     }
+    private IEnumerator AddWayPoints()
+    {
+        while (Vector3.Distance(wayMarkers.Last().position, LookingForObject.transform.position) > .6f)
+        {
+            Transform lastPos = wayMarkers.Last();
+            Transform nearestNext = NearestMarkerToTarget(markers.Except(wayMarkers).ToList(), lastPos.position, LookingForObject.transform.position);
+            Debug.DrawLine(nearestNext.position, lastPos.position, Color.blue, 10);
+            wayMarkers.Add(nearestNext);
+            yield return null;
+        }
+        pathIsGenerated = true;
+        StartCoroutine(MoveByPath());
+    }
     private IEnumerator MoveByPath()
     {
         float t = 0;
@@ -177,20 +187,7 @@ public class OrderManager : MonoBehaviour
         }
         Destroy(cameraTarget.gameObject);
         pathIsGenerated = false;
-    }
-    private IEnumerator AddWayPoints()
-    {
-        while (Vector3.Distance(wayMarkers.Last().position, LookingForObject.transform.position) > .6f) 
-        {
-            Transform lastPos = wayMarkers.Last();
-            Transform nearestNext = NearestMarkerToTarget(markers.Except(wayMarkers).ToList(), lastPos.position, LookingForObject.transform.position);
-            Debug.DrawLine(nearestNext.position, lastPos.position, Color.blue,10);
-            wayMarkers.Add(nearestNext);
-            yield return null;
-        }
-        pathIsGenerated = true;
-        StartCoroutine(MoveByPath());
-    }
+    }  
     //Поиск первого waypoint
     public Transform NearestMarkerToCam(List<Transform> markers, Vector3 cam)
     {
@@ -207,6 +204,7 @@ public class OrderManager : MonoBehaviour
             if (distanceNext < distanceCurrent)
             {
                 nearest = markers[i + 1];
+                distanceCurrent = distanceNext;
                 nearestIndex = i + 1;
             }
         }       
@@ -237,12 +235,12 @@ public class OrderManager : MonoBehaviour
             if (distanceNext < distanceCurrent)
             {
                 nearest = nearestInArea[i + 1];
+                distanceCurrent = distanceNext;
                 nearestIndex = i + 1;
             }
         }
         return nearest;
     }
-
 
     public void DoRaycast(Toggle tg)
     {
